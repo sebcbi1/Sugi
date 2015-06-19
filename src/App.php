@@ -14,6 +14,7 @@ class App extends Container
 {
     use CacheTrait;
     use ConfigTrait;
+    use DITrait;
     use EventsTrait;
     use LoggerTrait;
     use RouterTrait;

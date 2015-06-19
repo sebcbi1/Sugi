@@ -9,9 +9,8 @@
 
 namespace SugiPHP\Sugi;
 
-use SugiPHP\Sugi\App;
 use PHPUnit_Framework_TestCase;
-use StdClass;
+use SugiPHP\Sugi\App;
 
 class AppTest extends PHPUnit_Framework_TestCase
 {
@@ -27,7 +26,7 @@ class AppTest extends PHPUnit_Framework_TestCase
     {
         $app = new App();
         // check default settings
-        $this->assertSame($app["log_path"].date("Y-m-d").".log", $app["logger"]->getFilename());
+        $this->assertSame($app["log_path"] . date("Y-m-d") . ".log", $app["logger"]->getFilename());
         $this->assertSame($app["debug"] ? "debug" : "info", $app["logger"]->getLevel());
         // changing logger settings
         $app["logger"]->setFilename("");
