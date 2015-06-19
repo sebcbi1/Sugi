@@ -12,17 +12,30 @@ use Zend\Diactoros\ServerRequestFactory;
 
 class App extends Container
 {
+    use CacheTrait;
     use ConfigTrait;
+    use EventsTrait;
     use LoggerTrait;
     use RouterTrait;
-    use EventsTrait;
-    use CacheTrait;
 
     /**
      * Instance of a SugiPHP\Container\Container
      * This will be the first instance created.
      */
     protected static $container;
+
+    public function __get($name)
+    {
+        if ($this->has($name)) {
+            return $this->get($name);
+        };
+        throw new \Exception("App property not found", 1);
+    }
+
+    public function __set($name, $mixed)
+    {
+        return $this->conditionalSet($name, $mixed);
+    }
 
     public static function getInstance()
     {
@@ -53,23 +66,23 @@ class App extends Container
         });
         // web root path
         $this->conditionalSet("www_path", function () {
-            return rtrim($this["base_path"], "/")."/www/";
+            return rtrim($this["base_path"], "/") . "/www/";
         });
         // application path
         $this->conditionalSet("app_path", function () {
-            return rtrim($this["base_path"], "/")."/app/";
+            return rtrim($this["base_path"], "/") . "/app/";
         });
         // the path to store temporary files
         $this->conditionalSet("temp_path", function () {
-            return rtrim($this["base_path"], "/")."/tmp/";
+            return rtrim($this["base_path"], "/") . "/tmp/";
         });
         // log path
         $this->conditionalSet("log_path", function () {
-            return rtrim($this["base_path"], "/")."/log/";
+            return rtrim($this["base_path"], "/") . "/log/";
         });
         // config path
         $this->conditionalSet("config_path", function () {
-            return rtrim($this["app_path"], "/")."/config/";
+            return rtrim($this["app_path"], "/") . "/config/";
         });
 
         // ServerRequest based on PSR-7 ServerRequestInterface
