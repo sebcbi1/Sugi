@@ -10,34 +10,46 @@ namespace SugiPHP\Sugi;
 trait DITrait
 {
 
-    public function make($class)
+    public function make($class, $parameters = [])
     {
+        if ($class == 'SugiPHP\Sugi\App') {
+            return $this;
+        }
+
         $reflector        = new \ReflectionClass($class);
-        $reflectionMethod = $reflector->getConstructor();
-        $parameters       = $this->getParameters($reflectionMethod);
-        return $reflector->newInstanceArgs($parameters);
+        $arguments        = $this->getArguments($reflector->getConstructor(), $parameters);
+        return $reflector->newInstanceArgs($arguments);
     }
 
-    public function call($class, $method)
+    public function call($class, $method, $parameters = [])
     {
-        $obj              = $this->make($class);
+        $obj              = $this->make($class, isset($parameters[$class]) ? $parameters[$class] : []);
         $reflectionMethod = new \ReflectionMethod($class, $method);
-        $parameters       = $this->getParameters($reflectionMethod);
-        return $reflectionMethod->invokeArgs($obj, $parameters);
+        $arguments        = $this->getArguments($reflectionMethod, $parameters);
+        return $reflectionMethod->invokeArgs($obj, $arguments);
     }
 
-    protected function getParameters($reflectionMethod)
+    protected function getArguments($reflectionMethod, $parameters = [])
     {
-        $parameters = [];
+        $arguments = [];
         if ($reflectionMethod) {
             $dependencies = $reflectionMethod->getParameters();
             if ($dependencies) {
                 foreach ($dependencies as $dependency) {
-                    $parameters[] = $this->make($dependency->getClass()->name);
+                    if ($class = $dependency->getClass()) {
+                        $class = $class->name;
+                        $arguments[] = $this->make($class,isset($parameters[$class]) ? $parameters[$class] : [] );
+                    } elseif (isset($parameters[$dependency->name])) {
+                        $arguments[] = $parameters[$dependency->name];
+                    } elseif ($dependency->isDefaultValueAvailable()) {
+                        $arguments[] = $dependency->getDefaultValue();
+                    } else {
+                        $arguments[] = null;
+                    }
                 }
             }
         }
-        return $parameters;
+        return $arguments;
     }
 
 }

@@ -16,8 +16,14 @@ class DiTest extends PHPUnit_Framework_TestCase
     public function testMake()
     {
         $app = App::getInstance();
-        $foo = $app->make('SugiPHP\Sugi\Foo');
+        $foo = $app->make('SugiPHP\Sugi\Foo',['config' => [1,2,3]]);
         $this->assertInstanceOf("SugiPHP\Sugi\Foo", $foo);
+        $this->assertEquals([1,2,3], $foo->config);
+        $this->assertNull($foo->bar->config);
+
+        $foo = $app->make('SugiPHP\Sugi\Foo',['SugiPHP\Sugi\Bar' => ['config' => [1,2,3]]]);
+        $this->assertEquals([1,2,3], $foo->bar->config);
+        $this->assertNull($foo->config);
     }
 
     public function testCall()
@@ -26,21 +32,51 @@ class DiTest extends PHPUnit_Framework_TestCase
         $res = $app->call('SugiPHP\Sugi\Foo', 'test');
         $this->assertTrue($res);
     }
+    
+    public function testCall2()
+    {
+        $app = App::getInstance();
+        $res = $app->call('SugiPHP\Sugi\Foo', 'test2', ['someparam' => 'someParamValue']);
+        $this->assertTrue($res);
+    }
+
+
+    public function testCallApp()
+    {
+        $app = App::getInstance();
+        $app2 = $app->call('SugiPHP\Sugi\Foo', 'getApp');
+        $this->assertSame($app,$app2);
+    }
 
 }
 
 class Foo
 {
-    public function __construct(Bar $bar)
+
+    public $config;
+    public $bar;
+
+    public function __construct(Bar $bar, App $app, $config , $str = 'test')
     {
         $this->bar = $bar;
+        $this->app = $app;
+        $this->config = $config;
     }
+
+    public function getApp() {
+        return $this->app;
+    }
+
 
     public function test(Test $test)
     {
         $this->bar->test();
         $test->test();
-        echo "\nHello from Foo::test !";
+        // echo "\nHello from Foo::test !";
+        return true;
+    }
+
+    public function test2($someparam) {
         return true;
     }
 
@@ -48,9 +84,16 @@ class Foo
 
 class Bar
 {
+    public $config;
+
+    public function __construct($config)
+    {
+        $this->config = $config;
+    }
+
     public function test()
     {
-        echo "\nHello from Bar::test !";
+        // echo "\nHello from Bar::test !";
     }
 }
 
@@ -58,7 +101,7 @@ class Test
 {
     public function test()
     {
-        echo "\nHello from Test::test !";
+        // echo "\nHello from Test::test !";
     }
 
 }
